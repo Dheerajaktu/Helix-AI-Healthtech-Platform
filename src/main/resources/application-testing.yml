@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: Helix-AI-Health-Platform
+
+  datasource:
+    #    url: jdbc:mysql://localhost:3306/helix_ai_stage_auth
+    #    username: root
+    #    password: Root@123
+    url: jdbc:postgresql://localhost:5432/pg_helix_test_db
+    username: pgroot
+    password: Root.pg@123
+
+  jpa:
+    hibernate:
+      ddl-auto: update #create-drop --> only for development. Note - update some time doesn't detect new column
+    show-sql: true
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.MySQLDialect
+
+# =========================================
+# LOGGING
+# =========================================
+logging:
+  level:
+    root: INFO
+
+
+server:
+  port: 4001
+
+# =========================================
+# JWT Config
+# =========================================
+#jwt:
+#  secret: ${JWT_SECRET:this-is-a-temporary-dev-secret-key-must-be-at-least-64-bytes-long-for-hs512-algorithm}
+#  access-token-expiration: 900000       # 15 minutes in ms
+#  refresh-token-expiration: 2592000000  # 30 days in ms
+
+# =========================================
+# User-Service Config
+# =========================================
+
+internal:
+  api-key: ${INTERNAL_API_KEY:dev-internal-secret-key-change-in-production}
+  header:
+    name: X-Internal-Api-Key

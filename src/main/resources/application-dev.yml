@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: Helix-AI-Health-Platform
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pg_helix_dev_db
+    username: pgroot
+    password: Root.pg@123
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+# =========================================
+# LOGGING
+# =========================================
+logging:
+  level:
+    root: INFO
+    com.healthcare.helix: DEBUG
+    org.hibernate.SQL: DEBUG
+
+server:
+  port: 4001
+
+# =========================================
+# JWT Config
+# =========================================
+jwt:
+  secret: ${JWT_SECRET:this-is-a-temporary-dev-secret-key-must-be-at-least-64-bytes-long-for-hs512-algorithm}
+  access-token-expiration: 900000       # 15 minutes in ms
+  refresh-token-expiration: 2592000000  # 30 days in ms
