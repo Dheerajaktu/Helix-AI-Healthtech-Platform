@@ -24,6 +24,7 @@ public class UserProfileController {
     @GetMapping("/profile")
     public ResponseEntity<UserProfileResponse> getMyProfile(Authentication authentication) {
         UUID userId = (UUID) authentication.getPrincipal();
+        System.out.println("Getting profile for user " + userId);
         UserProfileResponse response = userProfileService.getMyProfile(userId);
         return ResponseEntity.ok(response);
     }

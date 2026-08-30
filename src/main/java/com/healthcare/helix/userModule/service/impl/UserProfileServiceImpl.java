@@ -1,9 +1,11 @@
 package com.healthcare.helix.userModule.service.impl;
 
+import com.healthcare.helix.common.exception.UserAlreadyExistsException;
+import com.healthcare.helix.common.exception.UserNotFoundException;
 import com.healthcare.helix.userModule.dto.request.UpdateUserProfileRequest;
 import com.healthcare.helix.userModule.dto.response.UserProfileResponse;
+import com.healthcare.helix.userModule.entity.MedicalProfile;
 import com.healthcare.helix.userModule.entity.UserProfile;
-import com.healthcare.helix.userModule.exception.UserNotFoundException;
 import com.healthcare.helix.userModule.repository.UserProfileRepository;
 import com.healthcare.helix.userModule.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -89,6 +92,33 @@ public class UserProfileServiceImpl implements UserProfileService {
                 .userProfileCompleted(profile.isUserProfileCompleted())
                 .userBasicProfileCompleted(profile.isUserBasicProfileCompleted())
                 .build();
+    }
+
+
+    public void createBasicProfile(
+            UUID userId, String email, String mobile, String role,
+            String firstName, String lastName, LocalDate dateOfBirth, String gender
+    ) {
+        if (userProfileRepository.existsByUserId(userId)) {
+            log.warn("Profile already exists for userId: {}", userId);
+            throw new UserAlreadyExistsException("Profile already exists for userId: " + userId);
+        }
+
+        UserProfile userProfile = UserProfile.builder()
+                .userId(userId)
+                .firstName(firstName)
+                .lastName(lastName)
+                .email(email)
+                .mobile(mobile)
+                .dateOfBirth(dateOfBirth)
+                .gender(gender)
+                .build();
+
+        MedicalProfile medicalProfile = new MedicalProfile();
+        userProfile.setMedicalProfile(medicalProfile);
+
+        userProfileRepository.save(userProfile);
+        log.info("Basic profile created for userId: {}", userId);
     }
 
 

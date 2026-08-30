@@ -14,9 +14,9 @@ import com.healthcare.helix.authModule.service.AuthService;
 import com.healthcare.helix.common.exception.InvalidCredentialsException;
 import com.healthcare.helix.common.exception.InvalidRefreshTokenException;
 import com.healthcare.helix.common.exception.UserAlreadyExistsException;
-import com.healthcare.helix.common.exception.UserProfileSyncException;
 import com.healthcare.helix.common.security.JwtService;
 import com.healthcare.helix.common.security.UserPrincipal;
+import com.healthcare.helix.userModule.service.UserProfileService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserDetailsService userDetailsService;
-//    private final UserServiceClient userServiceClient;
+    private final UserProfileService userProfileService;
 
     @Transactional
     public RegisterResponse register(RegisterRequest request){
@@ -65,37 +65,20 @@ public class AuthServiceImpl implements AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
 
-        User savedUser = repo.save(user);// Saving into Auth-Service DB;
-
-        System.out.println("============Auth Service 1============");
+        User savedUser = repo.save(user);
 
 
-
-        // Sync basic profile to user-service
-//        try {
-//            System.out.println("============Auth Service 2============");
-//            userServiceClient.createUserProfile(
-//                    savedUser.getId(),
-//                    savedUser.getEmail(),
-//                    savedUser.getMobileNumber(),
-//                    savedUser.getRole().name(),
-//                    savedUser.getFirstName(),
-//                    savedUser.getLastName(),
-//                    savedUser.getDateOfBirth(),
-//                    savedUser.getGender()
-//            );
-//        } catch (Exception e) {
-//            System.out.println("============Auth Service 3============"+ e.getMessage());
-//            log.error("Failed to sync user profile to user-service for userId: {}", savedUser.getId(), e);
-//            throw new UserProfileSyncException("Registration failed: unable to create user profile. Please try again later.", e);
-//            /* IMP NOTE - here we're directly calling to user-service and saving data so tightly coupled here
-//             * in future I will add Kafka here and will push into kafka to resolve this.
-//             *  NOTE - If user-service is not up then user can not register.
-//             *
-//             * */
-//        }
-
-
+        // Wiring User Profile Module Service and saving a basic profile in User Module DB
+        userProfileService.createBasicProfile(
+                savedUser.getId(),
+                savedUser.getEmail(),
+                savedUser.getMobileNumber(),
+                savedUser.getRole().name(),
+                savedUser.getFirstName(),
+                savedUser.getLastName(),
+                savedUser.getDateOfBirth(),
+                savedUser.getGender()
+        );
 
         return RegisterResponse.builder()
                 .userId(savedUser.getId())
@@ -153,10 +136,10 @@ public class AuthServiceImpl implements AuthService {
         String refreshToken = request.getRefreshToken();
 
         /* Checking if refresh token is valid */
-        if(!jwtService.validateRefreshToken(refreshToken)) throw new InvalidRefreshTokenException("Invalid refresh token");
+        if(!jwtService.isTokenValid(refreshToken)) throw new InvalidRefreshTokenException("Invalid refresh token");
 
         /* Checking if refresh token exist in DB */
-        RefreshTokenEntity tokenEntity =  refreshTokenRepository.findByToken(refreshToken)
+        RefreshTokenEntity tokenEntity = refreshTokenRepository.findByToken(refreshToken)
                 .orElseThrow(() -> new InvalidRefreshTokenException("Refresh token not found"));
 
         /* Checking if refresh token is revoked */
@@ -166,6 +149,6 @@ public class AuthServiceImpl implements AuthService {
         String username = jwtService.extractUsernameFromToken(refreshToken);
         UserPrincipal user = (UserPrincipal) userDetailsService.loadUserByUsername(username);
         String accessToken = jwtService.generateAccessToken(user);
-        return new  RefreshTokenResponse(accessToken);
+        return new RefreshTokenResponse(accessToken);
     }
 }

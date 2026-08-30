@@ -1,25 +1,34 @@
 package com.healthcare.helix.common.security;
 
-
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.UUID;
+import java.util.function.Function;
 
 @Service
 public class JwtService {
-    /* Config & Secret will move into config.yml file later: TODO */
-    private static final String SECRET_KEY = "my-super-secret-key-for-jwt-authentication-service-2026-very-secure-038923";
-    private static final long JWT_ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 15; // 15 minutes;
-    private static final long JWT_REFRESH_TOKEN_EXPIRATION = 1000L * 60 * 60 * 24 * 30; // 30 days in MS;
+
+    @Value("${jwt.secret}")
+    private String secretKey;
+
+    @Value("${jwt.access-token-expiration}")
+    private long accessTokenExpiration;
+
+    @Value("${jwt.refresh-token-expiration}")
+    private long refreshTokenExpiration;
 
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
-    };
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
+    }
 
+    // ---------------- TOKEN GENERATION ----------------
 
     public String generateAccessToken(UserDetails userDetails) {
         UserPrincipal principal = (UserPrincipal) userDetails;
@@ -29,65 +38,82 @@ public class JwtService {
                 .claim("userId", principal.getUserId().toString())
                 .claim("role", principal.getRole())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + JWT_ACCESS_TOKEN_EXPIRATION))
+                .expiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
                 .signWith(getSigningKey())
                 .compact();
     }
 
-
-    public String generateRefreshToken(UserDetails userDetails){
+    public String generateRefreshToken(UserDetails userDetails) {
         UserPrincipal principal = (UserPrincipal) userDetails;
 
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .claim("userId", principal.getUserId().toString())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + JWT_REFRESH_TOKEN_EXPIRATION))
+                .expiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
                 .signWith(getSigningKey())
                 .compact();
     }
 
+    // ---------------- TOKEN PARSING ----------------
 
-    public String extractUsernameFromToken(String token){
+    private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+                .getPayload();
     }
 
-
-    public boolean validateToken(String token, UserDetails userDetails) {
-        String  username = extractUsernameFromToken(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+    public <T> T extractClaim(String token, Function<Claims, T> resolver) {
+        return resolver.apply(extractAllClaims(token));
     }
 
-    public boolean validateRefreshToken(String token){
-        return isTokenExpired(token);
+    public String extractUsernameFromToken(String token) {
+        return extractClaim(token, Claims::getSubject);
     }
 
-
-    public boolean isTokenExpired(String token) {
-        Date expiration = Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getExpiration();
-
-        return expiration.before(new Date());
+    public UUID extractUserId(String token) {
+        String userId = extractClaim(token, claims -> claims.get("userId", String.class));
+        return UUID.fromString(userId);
     }
 
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
+    }
 
     public Date extractExpiration(String token) {
-        return Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getExpiration();
+        return extractClaim(token, Claims::getExpiration);
     }
 
+    // ---------------- VALIDATION ----------------
 
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    public boolean validateToken(String token, UserDetails userDetails) {
+        try {
+            String username = extractUsernameFromToken(token);
+            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Lightweight validation — sirf signature + expiry check karta hai,
+     * DB lookup ki zaroorat nahi. JwtAuthenticationFilter isko use karega.
+     */
+    public boolean isTokenValid(String token) {
+        try {
+            return !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public long getAccessTokenExpiration() {
+        return accessTokenExpiration;
+    }
 }
