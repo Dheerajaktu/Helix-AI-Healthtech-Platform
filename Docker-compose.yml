@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: helix-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pg_helix_dev_db
+      POSTGRES_USER: pgroot
+      POSTGRES_PASSWORD: Root.pg@123
+    ports:
+      - "5432:5432"
+    volumes:
+      - helix-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pgroot -d pg_helix_dev_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: helix-health-platform
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pg_helix_dev_db
+      SPRING_DATASOURCE_USERNAME: pgroot
+      SPRING_DATASOURCE_PASSWORD: Root.pg@123
+      JWT_SECRET: ${JWT_SECRET:-this-is-a-temporary-dev-secret-key-must-be-at-least-64-bytes-long-for-hs512-algorithm}
+    ports:
+      - "4001:4001"
+
+volumes:
+  helix-postgres-data:
