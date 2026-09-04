@@ -12,7 +12,7 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 echo "=========================================="
-echo "  Helix Health Platform — Dev Start"
+echo "  Helix Health Platform — Development Environment Start....."
 echo "=========================================="
 
 # 1. Make sure Java 21 is active (jenv) if jenv is installed

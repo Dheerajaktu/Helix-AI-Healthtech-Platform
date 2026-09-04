@@ -3,9 +3,11 @@ package com.healthcare.helix.userModule.service.impl;
 import com.healthcare.helix.common.exception.UserAlreadyExistsException;
 import com.healthcare.helix.common.exception.UserNotFoundException;
 import com.healthcare.helix.userModule.dto.request.UpdateUserProfileRequest;
-import com.healthcare.helix.userModule.dto.response.UserProfileResponse;
+import com.healthcare.helix.userModule.dto.response.*;
 import com.healthcare.helix.userModule.entity.MedicalProfile;
 import com.healthcare.helix.userModule.entity.UserProfile;
+import com.healthcare.helix.userModule.repository.FamilyMedicalHistoryRepository;
+import com.healthcare.helix.userModule.repository.MedicalConditionRepository;
 import com.healthcare.helix.userModule.repository.UserProfileRepository;
 import com.healthcare.helix.userModule.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,8 @@ import java.util.stream.Collectors;
 public class UserProfileServiceImpl implements UserProfileService {
 
     private final UserProfileRepository userProfileRepository;
+    private final MedicalConditionRepository medicalConditionRepository;
+    private final FamilyMedicalHistoryRepository familyMedicalHistoryRepository;
 
 
     public UserProfileResponse getMyProfile(UUID userId){
@@ -119,6 +123,67 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         userProfileRepository.save(userProfile);
         log.info("Basic profile created for userId: {}", userId);
+    }
+
+
+    public UserProfileFullResponse getFullProfile(UUID userId) {
+        UserProfile profile = userProfileRepository.findWithMedicalProfile(userId)
+                .orElseThrow(() -> new UserNotFoundException("Profile not found for userId: " + userId));
+
+        MedicalProfileResponse medicalProfileResponse = null;
+
+        if (profile.getMedicalProfile() != null) {
+            MedicalProfile mp = profile.getMedicalProfile();
+
+            List<MedicalConditionResponse> conditions = medicalConditionRepository
+                    .findByMedicalProfileId(mp.getId())
+                    .stream()
+                    .map(c -> MedicalConditionResponse.builder()
+                            .id(c.getId())
+                            .conditionName(c.getConditionName())
+                            .description(c.getDescription())
+                            .diagnosedDate(c.getDiagnosedDate())
+                            .active(c.isActive())
+                            .build())
+                    .toList();
+
+            List<FamilyMedicalHistoryResponse> familyHistory = familyMedicalHistoryRepository
+                    .findByMedicalProfileId(mp.getId())
+                    .stream()
+                    .map(f -> FamilyMedicalHistoryResponse.builder()
+                            .id(f.getId())
+                            .relation(f.getRelation())
+                            .conditionName(f.getConditionName())
+                            .build())
+                    .toList();
+
+            medicalProfileResponse = MedicalProfileResponse.builder()
+                    .id(mp.getId())
+                    .bloodGroup(mp.getBloodGroup())
+                    .height(mp.getHeight())
+                    .weight(mp.getWeight())
+                    .allergies(mp.getAllergies())
+                    .currentMedications(mp.getCurrentMedications())
+                    .medicalHistory(mp.getMedicalHistory())
+                    .medicalConditions(conditions)
+                    .familyMedicalHistory(familyHistory)
+                    .build();
+        }
+
+        return UserProfileFullResponse.builder()
+                .userId(profile.getUserId())
+                .firstName(profile.getFirstName())
+                .lastName(profile.getLastName())
+                .email(profile.getEmail())
+                .mobile(profile.getMobile())
+                .dateOfBirth(profile.getDateOfBirth())
+                .gender(profile.getGender())
+                .address(profile.getAddress())
+                .city(profile.getCity())
+                .state(profile.getState())
+                .country(profile.getCountry())
+                .medicalProfile(medicalProfileResponse)
+                .build();
     }
 
 

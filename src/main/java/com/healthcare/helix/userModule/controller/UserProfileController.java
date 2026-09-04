@@ -2,6 +2,7 @@ package com.healthcare.helix.userModule.controller;
 
 
 import com.healthcare.helix.userModule.dto.request.UpdateUserProfileRequest;
+import com.healthcare.helix.userModule.dto.response.UserProfileFullResponse;
 import com.healthcare.helix.userModule.dto.response.UserProfileResponse;
 import com.healthcare.helix.userModule.service.UserProfileService;
 import jakarta.validation.Valid;
@@ -24,7 +25,6 @@ public class UserProfileController {
     @GetMapping("/profile")
     public ResponseEntity<UserProfileResponse> getMyProfile(Authentication authentication) {
         UUID userId = (UUID) authentication.getPrincipal();
-        System.out.println("Getting profile for user " + userId);
         UserProfileResponse response = userProfileService.getMyProfile(userId);
         return ResponseEntity.ok(response);
     }
@@ -52,6 +52,12 @@ public class UserProfileController {
     public ResponseEntity<List<UserProfileResponse>> getAllUsers() {
         List<UserProfileResponse> users = userProfileService.getAllUsers();
         return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/profile/full")
+    public ResponseEntity<UserProfileFullResponse> getMyFullProfile(Authentication authentication) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(userProfileService.getFullProfile(userId));
     }
 
 }

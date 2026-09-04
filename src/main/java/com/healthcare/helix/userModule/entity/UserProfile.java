@@ -76,7 +76,7 @@ public class UserProfile {
 //        country = Locale.getDefault().getCountry(); // Dynamic Name
         emailVerified = false;
         isUserProfileCompleted = false;
-        isUserBasicProfileCompleted = false;
+        isUserBasicProfileCompleted = true;
     }
 
     @PreUpdate

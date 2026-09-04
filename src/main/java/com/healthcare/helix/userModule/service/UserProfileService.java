@@ -2,6 +2,7 @@ package com.healthcare.helix.userModule.service;
 
 
 import com.healthcare.helix.userModule.dto.request.UpdateUserProfileRequest;
+import com.healthcare.helix.userModule.dto.response.UserProfileFullResponse;
 import com.healthcare.helix.userModule.dto.response.UserProfileResponse;
 
 import java.time.LocalDate;
@@ -28,5 +29,8 @@ public interface UserProfileService {
             LocalDate dateOfBirth,
             String gender
     );
+
+    UserProfileFullResponse getFullProfile(UUID userId);   
+
 
 }
