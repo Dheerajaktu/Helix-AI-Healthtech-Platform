@@ -31,3 +31,11 @@ jwt:
   secret: ${JWT_SECRET:this-is-a-temporary-dev-secret-key-must-be-at-least-64-bytes-long-for-hs512-algorithm}
   access-token-expiration: 900000       # 15 minutes in ms
   refresh-token-expiration: 2592000000  # 30 days in ms
+
+
+cloudflare:
+  r2:
+    endpoint: ${R2_ENDPOINT}
+    access-key: ${R2_ACCESS_KEY}
+    secret-key: ${R2_SECRET_KEY}
+    bucket-name: helix-health-documents

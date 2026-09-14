@@ -21,15 +21,15 @@ public interface UserProfileRepository extends JpaRepository<UserProfile, UUID> 
     @Query("SELECT up FROM UserProfile up LEFT JOIN FETCH up.medicalProfile")
     List<UserProfile> findAllWithMedicalProfile();
 
-    @Query("""
-    SELECT DISTINCT up FROM UserProfile up
-    LEFT JOIN FETCH up.medicalProfile mp
-    LEFT JOIN FETCH mp.medicalConditions
-    LEFT JOIN FETCH mp.familyMedicalHistory
-    WHERE up.userId = :userId
-    """)
-    Optional<UserProfile> findFullProfileByUserId(@Param("userId") UUID userId);
-
+//    @Query("""
+//    SELECT DISTINCT up FROM UserProfile up
+//    LEFT JOIN FETCH up.medicalProfile mp
+//    LEFT JOIN FETCH mp.medicalConditions
+//    LEFT JOIN FETCH mp.familyMedicalHistory
+//    WHERE up.userId = :userId
+//    """)
+//    @Query(" SELECT up FROM UserProfile up LEFT JOIN FETCH up.medicalProfile WHERE up.userId = :userId")
+//    Optional<UserProfile> findFullProfileByUserId(@Param("userId") UUID userId);
 
     @Query("""
     SELECT up FROM UserProfile up

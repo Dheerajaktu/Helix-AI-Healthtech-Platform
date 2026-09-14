@@ -30,7 +30,9 @@ public interface UserProfileService {
             String gender
     );
 
-    UserProfileFullResponse getFullProfile(UUID userId);   
+    UserProfileFullResponse getFullProfile(UUID userId);
+
+   // UserProfileResponse findFullProfileByUserId(UUID userId);
 
 
 }
