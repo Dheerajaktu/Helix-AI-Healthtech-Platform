@@ -40,7 +40,7 @@ public class CloudStorageService {
 
     @PostConstruct
     public void logConfig() {
-        log.info(">>>>>>> R2 Endpoint: [{}]", endpoint);
+        log.info(">>>>>>> R2 Endpoint: [{}]", endpoint.length());
         log.info(">>>>>>>>> R2 Access Key length: [{}]", accessKey != null ? accessKey.length() : "NULL");
     }
 
@@ -63,7 +63,7 @@ public class CloudStorageService {
     }
 
     /**
-     * File ko R2 mein upload karta hai, aur unique storage key return karta hai
+     * Upload file in R2 and returns unique storage key.
      */
     public String uploadFile(MultipartFile file, UUID userId) {
         String key = userId + "/" + UUID.randomUUID() + "_" + file.getOriginalFilename();
@@ -84,8 +84,8 @@ public class CloudStorageService {
     }
 
     /**
-     * Temporary (time-limited) URL generate karta hai file download/view karne ke liye
-     * Bucket private rahega, koi permanent public URL nahi banega
+     * Generate temporary (time-limited) URL to view/download file
+     * Bucket is private, No permanent public URL
      */
     public String generatePresignedUrl(String key) {
         try (S3Presigner presigner = getPresigner()) {
