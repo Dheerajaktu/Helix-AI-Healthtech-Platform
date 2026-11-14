@@ -82,6 +82,18 @@
             <version>2.29.52</version>
         </dependency>
 
+        <!--Kafka  -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
+       <!-- Java Mail Sender-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Dev Tools -->
         <dependency>
             <groupId>org.projectlombok</groupId>
