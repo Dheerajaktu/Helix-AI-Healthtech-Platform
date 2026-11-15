@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.UUID;
 
-public interface FamilyMedicalHistoryRepository extends JpaRepository<FamilyMedicalHistory, Long> {
+public interface FamilyMedicalHistoryRepository extends JpaRepository<FamilyMedicalHistory, UUID> {
 
     @Query("SELECT fh FROM FamilyMedicalHistory fh WHERE fh.medicalProfile.id = :medicalProfileId")
     List<FamilyMedicalHistory> findByMedicalProfileId(@Param("medicalProfileId") UUID medicalProfileId);
